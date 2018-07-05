@@ -1,0 +1,28 @@
+- name: This playbook will installs,configures and deploy web page in nginx web server
+  hosts: all
+  vars:
+     greeting_message:  "DevOps"
+     automation_tool:  "Ansible"
+     provisioner_tool:  "Docker"
+     proxy_conf:
+        http_proxy:  http://genproxy.corp.amdocs.com:8080
+        https_proxy:  https://genproxy.corp.amdocs.com:8080
+  tasks:
+  - name: install nginx in Ubuntu
+    apt:  name=nginx state=latest update_cache=yes
+    environment: "{{proxy_conf}}"
+    when: ( ansible_distribution == "Ubuntu" and ansible_os_family == "Debian" )
+
+  - name: Create the web root folder
+    file: path=/var/html state=directory mode=0777
+
+  - name: Configure  nginx in Ubuntu
+    copy: src=default dest=/etc/nginx/sites-available/default
+    when: ( ansible_distribution == "Ubuntu" and ansible_os_family == "Debian" ) 
+
+  - name: Deploy our custom web page
+    template: src=index.html.j2 dest=/var/html/index.html
+
+  - name: Restart nginx in Ubuntu
+    command: "service nginx start" 
+    when: (  ansible_distribution == "Ubuntu" and ansible_os_family == "Debian" ) 
